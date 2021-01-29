@@ -25,7 +25,7 @@ api = Api(app)
 #put방식이면 todo_id로 수정
 #api.add_resource(Matzip,'/shoong/<lat>/<lng>')
 api.add_resource(Matzip,'/places/matzip')
-#api.add_resource(JangGwan,'/places/janggwan')
+api.add_resource(JangGwan,'/places/janggwan')
 #/todos 로 요청시 get방식이면 전체조회
 #                post방식이면 할일 등록
 #api.add_resource(TodoList,'/todos')

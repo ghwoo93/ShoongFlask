@@ -1,8 +1,6 @@
 from flask_restful import Resource,reqparse
 from flask import make_response
-
 import os
-
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
@@ -12,14 +10,11 @@ import json,csv
 
 class Matzip(Resource):
     def __init__(self):
-
-
         # Headless Browser를 위한 옵션 설정
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
         options.add_argument('window-size=1920x1080')
-        options.add_argument(
-            'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36')
+        options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36')
 
         # 크롬드라이버(chromedriver.exe)가 위치한 경로(절대 경로)
         driverPath = '{}\chromedriver.exe'.format(os.path.dirname(os.path.realpath(__file__)))
@@ -35,24 +30,17 @@ class Matzip(Resource):
     def get(self):
 
         try:
-
             args = self.parser.parse_args()
             lat = args['lat']
             lng = args['lng']
             print('lat:',lat)
             print('lng:', lng)
-            # driver = webdriver.Chrome(driverPath,options=options)
             # 2. WebDriver객체의 get메소드로 특정 사이트를 브라우저에 로딩(자동으로 크롬브라우저 실행)
             self.driver.get('https://www.google.co.kr/maps/search/음식점/@{},{},14z'.format(lat,lng))
-
-            # # 3.지역버튼 찾고 클릭처리하기 //#container > div > form > fieldset > div > section > article.find_store_cont > article > header.loca_search > h3 > a
-            # //*[@id="passive-assist"]/div/div[2]/div/div[2]/div[2]/div[1]/button[2]
-            # button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="passive-assist"]/div/div[2]/div/div[2]/div[2]/div[1]/button[2]')))
-            # button.click()
             WebDriverWait(self.driver, 5).until(
                 EC.element_to_be_clickable((By.XPATH, '//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div[2]')))
             foods = []
-            # 가게정보
+            # 가게정보(version1)
             names = self.driver.find_elements_by_xpath(
                 '//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div[2]/div[1]/div[1]/div[1]/div[2]/h3/span')
             urls = self.driver.find_elements_by_xpath(
@@ -65,6 +53,16 @@ class Matzip(Resource):
                 '//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div[2]/div[1]/div[5]/span[2]/span[1]')
             scores = self.driver.find_elements_by_xpath(
                 '//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div[2]/div[1]/div[1]/div[1]/div[2]/span[3]/span[1]/span[1]/span')
+
+            # 가게정보(version2)
+            # names = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div[1]')
+            # urls = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[1]/div[2]/div[1]/div[2]')
+            # kinds = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div[4]/div[1]/span[1]/jsl/span[2]')
+            # addrs = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div[4]/div[1]/span[2]/jsl/span[2]')
+            # openTimes = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div[4]/div[2]/span/jsl/span[2]')
+            # scores = self.driver.find_elements_by_xpath('//*[@id="pane"]/div/div[1]/div/div/div[4]/div[1]/div/div/div/div[2]/div[1]/div/div/div/div[3]/div/span[2]/span[2]/span[1]')
+
+
             # 가게정보 데이터 출력
             results = list(zip(names, urls, kinds, addrs, openTimes, scores))
             for name, url, kind, addr, openTime, score in results:
@@ -89,7 +87,7 @@ class Matzip(Resource):
             #     writer.writerow(food)
             # writer.writerows(foods)
             # f.close()
-            print('스크래핑한 데이터 CSV파일로 저장완료')
+            #print('스크래핑한 데이터 CSV파일로 저장완료')
 
             return make_response({'places': foods})
 
