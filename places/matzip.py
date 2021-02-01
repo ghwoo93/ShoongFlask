@@ -12,8 +12,6 @@ import json,csv
 
 class Matzip(Resource):
     def __init__(self):
-
-
         # Headless Browser를 위한 옵션 설정
         options = webdriver.ChromeOptions()
         options.add_argument('headless')
