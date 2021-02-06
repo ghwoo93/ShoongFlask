@@ -2,14 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4bce97b3-ded0-4044-88bb-cdd97f3ddbc3" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/jatooroute/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/ShoongFlask.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ShoongFlask.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/places/janggwan.py" beforeDir="false" afterPath="$PROJECT_DIR$/places/janggwan.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/places/matzip.py" beforeDir="false" afterPath="$PROJECT_DIR$/places/matzip.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
