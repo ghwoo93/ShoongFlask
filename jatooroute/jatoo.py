@@ -106,7 +106,6 @@ class Jatoo(Resource):
             self.browser.back()
         sleep(2)
 
-
         total_routes=[]
         for gpx in routes:
             route = {

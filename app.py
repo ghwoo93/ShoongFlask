@@ -16,7 +16,7 @@ from settings.config import DIALOG_CONFIG#프로젝트 아이디/API키가 설�
 from google.protobuf.json_format import MessageToJson   #costom playlode에 필요
 
 
-#플라스크 앱 생성
+#플라스크 앱 생성s
 # Flask 객체 선언, 파라미터로 어플리케이션 패키지의 이름을 넣어줌.
 app = Flask(__name__)
 #JSON 응답 한글 처리
