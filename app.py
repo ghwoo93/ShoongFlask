@@ -14,6 +14,7 @@ from settings.config import DIALOG_CONFIG#프로젝트 아이디/API키가 설�
 from google.protobuf.json_format import MessageToJson   #costom playlode에 필요
 
 
+
 #플라스크 앱 생성
 # Flask 객체 선언, 파라미터로 어플리케이션 패키지의 이름을 넣어줌.
 app = Flask(__name__)
@@ -57,65 +58,73 @@ if __name__ =='__main__':
 
 
 
-#별추가 :
+# Rest API 스프링의 채팅창으로 받은 메세지를 파이썬에서 처리해준다.
 @app.route('/message',methods=['GET'])
-def handleMessage():#사용자 UI(Client App)에서 보낸 대화를 받는 함수
-              #받은 대화는 다시 DialogFlow로 보낸다
+def handleMessage():#  사용자 UI(Client App)에서 보낸 대화를 받는 함수
+              #받은 대화는 다시 DialogFlow 로 보낸다
 
-    session['session_id'] = str(uuid.uuid4())#다른 어플리케이션의 UI사용시
+    session['session_id'] = str(uuid.uuid4())#다른 어플리케이션의 UI 사용시
     message= request.values.get('message')
 
     print('사용자 UI(Client App)에서 입력한 메시지:',message)
 
-    #프로젝트 아이디 가져오기
+    #  프로젝트 아이디 가져오기
     project_id = DIALOG_CONFIG.get('PROJECT_ID')
-    #플라스크앱이  다얼로그 플로우로부터 받은 응답
+    #  플라스크앱이  다얼로그 플로우로부터 받은 응답
     returnjson = response_from_dialogflow(project_id,session['session_id'],message,'ko')
-    #다이얼로그로부터 받은 응답을 클라이언트 App(사용자 UI)에 전송
+    #  다이얼로그로부터 받은 응답을 클라이언트 App(사용자 UI)에 전송
     return returnjson
 
 
 def response_from_dialogflow(project_id, session_id, message, language_code):
-    # step1. DialogFlow와 사용자가 상호작용할 세션 클라이언트 생성
+    # step1. DialogFlow 와 사용자가 상호작용할 세션 클라이언트 생성
     session_client = dialogflow.SessionsClient()
     session_path = session_client.session_path(project_id, session_id)
     # projects/프로젝트아이디/agent/sessions/세션아이디 로 생성된다
     print('[session_path]', session_path, sep='\n')
     if message:  # 사용자가 대화를 입력한 경우.대화는 utf-8로 인코딩된 자연어.256자를 넘어서는 안된다
-        # step2.사용자 메시지(일반 텍스트)로 TextInput생성
+        # step2.사용자 메시지(일반 텍스트)로 TextInput 생성
         text_input = dialogflow.types.TextInput(text=message, language_code=language_code)
         print('[text_input]', text_input, sep='\n')
 
-        # step 3. 생성된 TextInput객체로 QueryInput객체 생성(DialogFlow로 전송할 질의 생성)
+        # step 3. 생성된 TextInput 객체로 QueryInput 객체 생성(DialogFlow 로 전송할 질의 생성)
         query_input = dialogflow.types.QueryInput(text=text_input)
         print('[query_input]', query_input, sep='\n')
 
         response = session_client.detect_intent(session=session_path, query_input=query_input)
         print('[response]', response, sep='\n')
-        # 가공 _ code에 따라서 실행이 달라짐 1 : 단순응답 (변화 필요) 2: 날씨 응답(파이썬)  3: 자전거가게 (스프링에서 처리, 고객 주소 필요)
-        res = MessageToJson(response)#응답받고
-        res = json.loads(res)#json으로 변환하여 결과값을 빼낼 수 있는 상태로
-
-        isCode = is_json_key_present(res) #code 값 존재여부 판단/
-        print(isCode)
+        # 가공 _  응답받은 code 값에 따라서 실행이 달라짐
+        res = MessageToJson(response)
+        res = json.loads(res)#  응답을 json 으로 변환하여 결과값을 빼낼 수 있는 상태로 만든다
+        isCode = is_json_key_present(res) #code 값 존재여부 판단
         if isCode :
             code = res['queryResult']['fulfillmentMessages'][0]['payload']['code']
 
-            if code == "2":# 날씨
+            if code == "2":# 날씨 크롤링
                 location = res['queryResult']['fulfillmentMessages'][0]['payload']['location']
                 time = res['queryResult']['fulfillmentMessages'][0]['payload']['time']
                 print(location)
                 weatherInfo =  get_weather_info(location,time,code)
                 return weatherInfo
 
-            elif code == "3":
+            elif code == "3":#  자전거 가게 검색
                 msg = res['queryResult']['fulfillmentMessages'][0]['payload']['msg']
                 return jsonify({'code': code, 'msg': msg})
 
-            elif code == "4":
+            elif code == "4":#내 이번달 기록
                 return jsonify({'code': code})
 
-        else :
+            elif code == "5":#  자전거 보관소 API
+                location = res['queryResult']['fulfillmentMessages'][0]['payload']['location']
+                bicycleStorageReturn = bicycle_storage(code,location)
+                return bicycleStorageReturn
+
+            elif code == "6":#  자전거 대여소 API
+                location = res['queryResult']['fulfillmentMessages'][0]['payload']['location']
+                bicycleLendReturn = bicycle_lend(code,location)
+                return bicycleLendReturn
+
+        else :#일반 대화
             return jsonify({'code': '1' ,'msg':response.query_result.fulfillment_text})
 
 
@@ -199,3 +208,88 @@ def get_weather_info(location,time,code):
             resultMsg= "["+location+"]"+" 내일 날씨 정보는 아래와 같습니다." + "<br><br>" +"오전"+"<br>" + "온도: " + tomorrowMoring + " "+ tomorrowMState + "<br>" + "오후"+"<br>"+"온도: " + tomorrowAfter+" " +tomorrowAState
 
         return jsonify({'code': code , 'location': location, 'msg':resultMsg})
+
+def bicycle_storage(code,location):
+        #지역넘어 올때 띄어쓰기도 같이 가지고 와서
+        location = location.lstrip()
+        location = location.rstrip()
+        print("location :" + location)
+
+        url = "http://api.data.go.kr/openapi/tn_pubr_public_bcycl_dpstry_api?ServiceKey=aDwUIrmAo67ixaHvEDwQsyOiWdkD3s7pDHOnMn651JX46Pj73wR53RbTSs7Wh5m01Ka5IFvi89dexQTeK2CNkQ%3D%3D&type=xml&pageNo=1&numOfRows=10000"
+        print(url)
+
+        response = requests.get(url)
+        #print(response.text)
+        infoList = []
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        for i in soup.select('item'):
+
+            try:
+                response_location = i.find('rdnmadr').text
+                if location in response_location:
+                    print('정보는 여기에')
+                    print(i)
+                    info={'addr':i.find('rdnmadr').text,
+                          'lat':i.find('latitude').text,
+                          'lng': i.find('longitude').text,
+                          'airinjectoryn':i.find('airinjectoryn').text
+                          }
+                    infoList.append(info)
+
+            except:
+                print('에러')
+
+        print(infoList)
+        msg="["+location+"]"+"근처 자전거 보관소는 "+str(len(infoList))+"개 있습니다."
+        returnList ={"location":location,"code":code,"msg":msg,"infoList":infoList}
+        return jsonify(returnList)
+        #data = json.loads(response.text)#json으로 받아서 사용하려 하니까 에러가 뜬다. 임시로 xml로 대체했음음
+        #print(dat)
+
+
+
+def bicycle_lend(code, location):
+    # 지역넘어 올때 띄어쓰기도 같이 가지고 와서
+    location = location.lstrip()
+    location = location.rstrip()
+    print("location :" + location)
+
+    url = "http://api.data.go.kr/openapi/tn_pubr_public_bcycl_lend_api?ServiceKey=aDwUIrmAo67ixaHvEDwQsyOiWdkD3s7pDHOnMn651JX46Pj73wR53RbTSs7Wh5m01Ka5IFvi89dexQTeK2CNkQ%3D%3D&type=xml&pageNo=0&numOfRows=1260"
+    print(url)
+
+    response = requests.get(url)
+    print(response.text)
+    infoList = []
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+    for i in soup.select('item'):
+
+        try:
+            response_location = i.find('rdnmadr').text
+            if location in response_location:
+                print('정보는 여기에')
+                print(i)
+                info = {'addr': i.find('rdnmadr').text,
+                        'lat': i.find('latitude').text,
+                        'lng': i.find('longitude').text,
+                        'bcyclLendNm': i.find('bcycllendnm').text,
+                        'bcyclLendSe': i.find('bcycllendse').text,
+                        'operOpenHm': i.find('operopenhm').text,
+                        'operCloseHm': i.find('operclosehm').text,
+                        'rstde': i.find('rstde').text,
+                        'chrgeSe': i.find('chrgese').text,
+                        'bcyclUseCharge': i.find('bcyclusecharge').text,
+                        'phoneNumber': i.find('phonenumber').text,
+                        }
+                infoList.append(info)
+
+        except:
+            print('에러')
+
+    print(infoList)
+    msg = "[" + location + "]" + "근처 자전거 대여소는 " + str(len(infoList)) + "개 있습니다."
+    returnList = {"location": location, "code": code, "msg": msg, "infoList": infoList}
+    return jsonify(returnList)
+    # data = json.loads(response.text)#json으로 받아서 사용하려 하니까 에러가 뜬다. 임시로 xml로 대체했음음
+    # print(dat)
