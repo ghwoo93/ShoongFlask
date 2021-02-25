@@ -44,8 +44,8 @@ class Jatoo(Resource):
 
 
         #로그인
-        self.browser.find_element_by_id("UserName").send_keys("firenze5064@naver.com")
-        self.browser.find_element_by_id("Password").send_keys("mp116306!")
+        self.browser.find_element_by_id("UserName").send_keys("")
+        self.browser.find_element_by_id("Password").send_keys("")
         self.browser.find_element_by_id("Password").send_keys(Keys.ENTER)
         #루트 검색 이동
         self.browser.get("http://jatoo.net/Route/Search")
